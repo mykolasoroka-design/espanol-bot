@@ -629,15 +629,15 @@ async def handle_callback_quiz_next(update: Update, ctx: ContextTypes.DEFAULT_TY
     pass  # handled in main callback
 
 
-async def main():
+
+
+
+if __name__ == "__main__":
+  
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_callback))
     print("🤖 Бот запущено!")
-    await app.run_polling(drop_pending_updates=True)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    app.run_polling(drop_pending_updates=True)
 
 # This file is complete above

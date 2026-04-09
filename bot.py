@@ -1,8 +1,7 @@
 import os
-import json
 import random
 import asyncio
-from datetime import datetime
+from datetime import time
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application, CommandHandler, CallbackQueryHandler,
@@ -12,437 +11,453 @@ from telegram.ext import (
 TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 
 # ══════════════════════════════════════════════════════════
-# НАВЧАЛЬНИЙ КОНТЕНТ
+# КОНТЕНТ — УРОКИ
 # ══════════════════════════════════════════════════════════
-
 LESSONS = [
     {
-        "id": 1,
-        "title": "🔤 Урок 1: Привітання",
+        "id": 1, "title": "🔤 Урок 1: Привітання",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 1: Привітання*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "*Основні привітання:*\n\n"
-            "🌅 *Hola* — Привіт\n"
-            "🌄 *Buenos días* — Доброго ранку\n"
-            "☀️ *Buenas tardes* — Добрий день\n"
-            "🌙 *Buenas noches* — Добрий вечір/ніч\n"
-            "👋 *¿Cómo estás?* — Як справи?\n"
-            "😊 *Bien, gracias* — Добре, дякую\n"
-            "🤝 *Mucho gusto* — Приємно познайомитись\n"
-            "👋 *Adiós* — До побачення\n"
-            "💬 *Hasta luego* — До зустрічі\n\n"
-            "💡 *Підказка:* В іспанській є два «ти»:\n"
-            "• *tú* — неформальне (друзі, діти)\n"
-            "• *usted* — формальне (незнайомці, старші)"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 1: Привітання*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "🌅 *Hola* — Привіт\n🌄 *Buenos días* — Доброго ранку\n"
+            "☀️ *Buenas tardes* — Добрий день\n🌙 *Buenas noches* — Добрий вечір\n"
+            "👋 *¿Cómo estás?* — Як справи?\n😊 *Bien, gracias* — Добре, дякую\n"
+            "🤝 *Mucho gusto* — Приємно познайомитись\n💬 *Hasta luego* — До зустрічі\n\n"
+            "💡 *tú* = неформальне 'ти'\n💡 *usted* = формальне 'Ви'"
         ),
         "quiz": [
-            {"q": "Як сказати 'Привіт' іспанською?", "a": "Hola", "options": ["Hola", "Adiós", "Gracias", "Buenos"]},
-            {"q": "Що означає 'Buenos días'?", "a": "Доброго ранку", "options": ["Добрий вечір", "Доброго ранку", "Добрий день", "До побачення"]},
-            {"q": "Як спитати 'Як справи?'", "a": "¿Cómo estás?", "options": ["¿Qué hora es?", "¿Cómo te llamas?", "¿Cómo estás?", "¿Dónde estás?"]},
+            {"q":"Як сказати 'Привіт'?","a":"Hola","wrong":["Adiós","Gracias","Buenos días","Buenas noches","Mucho gusto"]},
+            {"q":"Що означає 'Buenos días'?","a":"Доброго ранку","wrong":["Добрий вечір","Добрий день","До побачення","Як справи?","Дякую"]},
+            {"q":"Як спитати 'Як справи?'","a":"¿Cómo estás?","wrong":["¿Qué hora es?","¿Cómo te llamas?","¿Dónde estás?","¿Cuántos años tienes?","Hasta luego"]},
+            {"q":"Що означає 'Mucho gusto'?","a":"Приємно познайомитись","wrong":["Дякую","Добре","До побачення","Вибачте","Будь ласка"]},
+            {"q":"Як сказати 'До зустрічі'?","a":"Hasta luego","wrong":["Adiós","Hola","Gracias","Por favor","De nada"]},
         ]
     },
     {
-        "id": 2,
-        "title": "🔢 Урок 2: Числа 1–20",
+        "id": 2, "title": "🔢 Урок 2: Числа 1–20",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 2: Числа 1–20*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "1️⃣ uno   2️⃣ dos   3️⃣ tres\n"
-            "4️⃣ cuatro   5️⃣ cinco   6️⃣ seis\n"
-            "7️⃣ siete   8️⃣ ocho   9️⃣ nueve\n"
-            "🔟 diez\n\n"
-            "1️⃣1️⃣ once   1️⃣2️⃣ doce   1️⃣3️⃣ trece\n"
-            "1️⃣4️⃣ catorce   1️⃣5️⃣ quince\n"
-            "1️⃣6️⃣ dieciséis   1️⃣7️⃣ diecisiete\n"
-            "1️⃣8️⃣ dieciocho   1️⃣9️⃣ diecinueve\n"
-            "2️⃣0️⃣ veinte\n\n"
-            "💡 *Лайфхак:* 11-15 треба просто вивчити.\n"
-            "16-19 = dieci + (6-9)"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 2: Числа 1–20*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "1️⃣ uno  2️⃣ dos  3️⃣ tres  4️⃣ cuatro  5️⃣ cinco\n"
+            "6️⃣ seis  7️⃣ siete  8️⃣ ocho  9️⃣ nueve  🔟 diez\n\n"
+            "1️⃣1️⃣ once  1️⃣2️⃣ doce  1️⃣3️⃣ trece\n"
+            "1️⃣4️⃣ catorce  1️⃣5️⃣ quince\n"
+            "1️⃣6️⃣ dieciséis  1️⃣7️⃣ diecisiete\n"
+            "1️⃣8️⃣ dieciocho  1️⃣9️⃣ diecinueve  2️⃣0️⃣ veinte\n\n"
+            "💡 16-19 = dieci + (6-9)"
         ),
         "quiz": [
-            {"q": "Як буде '5' іспанською?", "a": "cinco", "options": ["cuatro", "cinco", "seis", "siete"]},
-            {"q": "Що означає 'diez'?", "a": "10", "options": ["7", "8", "9", "10"]},
-            {"q": "Як буде '15' іспанською?", "a": "quince", "options": ["catorce", "quince", "trece", "dieciséis"]},
+            {"q":"Як буде '5' іспанською?","a":"cinco","wrong":["cuatro","seis","siete","tres","ocho"]},
+            {"q":"Що означає 'diez'?","a":"10","wrong":["7","8","9","11","6"]},
+            {"q":"Як буде '15' іспанською?","a":"quince","wrong":["catorce","trece","dieciséis","once","doce"]},
+            {"q":"Що означає 'veinte'?","a":"20","wrong":["10","15","12","18","19"]},
+            {"q":"Як буде '3' іспанською?","a":"tres","wrong":["dos","cuatro","uno","cinco","seis"]},
         ]
     },
     {
-        "id": 3,
-        "title": "🎨 Урок 3: Кольори",
+        "id": 3, "title": "🎨 Урок 3: Кольори",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 3: Кольори*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "❤️ *rojo* — червоний\n"
-            "💛 *amarillo* — жовтий\n"
-            "💙 *azul* — синій\n"
-            "💚 *verde* — зелений\n"
-            "🤍 *blanco* — білий\n"
-            "🖤 *negro* — чорний\n"
-            "🟠 *naranja* — помаранчевий\n"
-            "🟣 *morado / violeta* — фіолетовий\n"
-            "🩷 *rosa* — рожевий\n"
-            "🟤 *marrón* — коричневий\n"
-            "⚪ *gris* — сірий\n\n"
-            "💡 *Граматика:* Прикметники в іспанській\n"
-            "узгоджуються з іменником за родом:\n"
-            "• El coche *rojo* (машина червона — м.р.)\n"
-            "• La casa *roja* (будинок червоний — ж.р.)"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 3: Кольори*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "❤️ *rojo* — червоний\n💛 *amarillo* — жовтий\n💙 *azul* — синій\n"
+            "💚 *verde* — зелений\n🤍 *blanco* — білий\n🖤 *negro* — чорний\n"
+            "🟠 *naranja* — помаранчевий\n🟣 *morado* — фіолетовий\n"
+            "🩷 *rosa* — рожевий\n🟤 *marrón* — коричневий\n\n"
+            "💡 Прикметники узгоджуються з іменником:\n"
+            "• El coche *rojo* (м.р.)\n• La casa *roja* (ж.р.)"
         ),
         "quiz": [
-            {"q": "Як буде 'синій' іспанською?", "a": "azul", "options": ["verde", "azul", "rojo", "amarillo"]},
-            {"q": "Що означає 'negro'?", "a": "чорний", "options": ["білий", "сірий", "чорний", "коричневий"]},
-            {"q": "Як буде 'зелений' іспанською?", "a": "verde", "options": ["verde", "blanco", "naranja", "rosa"]},
+            {"q":"Як буде 'синій'?","a":"azul","wrong":["verde","rojo","amarillo","blanco","negro"]},
+            {"q":"Що означає 'negro'?","a":"чорний","wrong":["білий","сірий","коричневий","фіолетовий","рожевий"]},
+            {"q":"Як буде 'зелений'?","a":"verde","wrong":["blanco","naranja","rosa","azul","rojo"]},
+            {"q":"Що означає 'amarillo'?","a":"жовтий","wrong":["помаранчевий","червоний","рожевий","коричневий","синій"]},
+            {"q":"Як буде 'білий'?","a":"blanco","wrong":["negro","rojo","verde","azul","morado"]},
         ]
     },
     {
-        "id": 4,
-        "title": "👨‍👩‍👧 Урок 4: Родина",
+        "id": 4, "title": "👨‍👩‍👧 Урок 4: Родина",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 4: Родина*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "👨 *el padre* — батько\n"
-            "👩 *la madre* — мати\n"
-            "👦 *el hijo* — син\n"
-            "👧 *la hija* — дочка\n"
-            "👴 *el abuelo* — дідусь\n"
-            "👵 *la abuela* — бабуся\n"
-            "👱 *el hermano* — брат\n"
-            "👱‍♀️ *la hermana* — сестра\n"
-            "👨‍💼 *el tío* — дядько\n"
-            "👩‍💼 *la tía* — тітка\n\n"
-            "💡 *Артиклі:*\n"
-            "• *el* — чоловічий рід (el padre)\n"
-            "• *la* — жіночий рід (la madre)\n"
-            "• *los / las* — множина"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 4: Родина*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "👨 *el padre* — батько\n👩 *la madre* — мати\n"
+            "👦 *el hijo* — син\n👧 *la hija* — дочка\n"
+            "👴 *el abuelo* — дідусь\n👵 *la abuela* — бабуся\n"
+            "👱 *el hermano* — брат\n👱‍♀️ *la hermana* — сестра\n"
+            "👨‍💼 *el tío* — дядько\n👩‍💼 *la tía* — тітка\n\n"
+            "💡 *el* = чоловічий рід\n💡 *la* = жіночий рід"
         ),
         "quiz": [
-            {"q": "Як буде 'мати' іспанською?", "a": "la madre", "options": ["el padre", "la madre", "la hija", "la abuela"]},
-            {"q": "Що означає 'el hermano'?", "a": "брат", "options": ["сестра", "брат", "дядько", "кузен"]},
-            {"q": "Який артикль у слова 'hijo' (син)?", "a": "el", "options": ["la", "el", "los", "las"]},
+            {"q":"Як буде 'мати'?","a":"la madre","wrong":["el padre","la hija","la abuela","la hermana","la tía"]},
+            {"q":"Що означає 'el hermano'?","a":"брат","wrong":["сестра","дядько","батько","дідусь","кузен"]},
+            {"q":"Який артикль у 'hijo' (син)?","a":"el","wrong":["la","los","las","un","una"]},
+            {"q":"Що означає 'la abuela'?","a":"бабуся","wrong":["дідусь","мати","тітка","сестра","дочка"]},
+            {"q":"Як буде 'дочка'?","a":"la hija","wrong":["el hijo","la hermana","la madre","la tía","la abuela"]},
         ]
     },
     {
-        "id": 5,
-        "title": "🍎 Урок 5: Їжа",
+        "id": 5, "title": "🍎 Урок 5: Їжа",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 5: Їжа*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "🍞 *el pan* — хліб\n"
-            "🥛 *la leche* — молоко\n"
-            "🍳 *el huevo* — яйце\n"
-            "🍗 *el pollo* — курка\n"
-            "🐟 *el pescado* — риба\n"
-            "🍚 *el arroz* — рис\n"
-            "🥗 *la ensalada* — салат\n"
-            "☕ *el café* — кава\n"
-            "💧 *el agua* — вода\n"
-            "🍷 *el vino* — вино\n\n"
-            "💡 *Корисні фрази:*\n"
-            "• *Tengo hambre* — Я голодний/а\n"
-            "• *Tengo sed* — Я хочу пити\n"
-            "• *¡Buen provecho!* — Смачного!"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 5: Їжа*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "🍞 *el pan* — хліб\n🥛 *la leche* — молоко\n🍳 *el huevo* — яйце\n"
+            "🍗 *el pollo* — курка\n🐟 *el pescado* — риба\n"
+            "🍚 *el arroz* — рис\n🥗 *la ensalada* — салат\n"
+            "☕ *el café* — кава\n💧 *el agua* — вода\n🍷 *el vino* — вино\n\n"
+            "💡 *Tengo hambre* — Я голодний/а\n"
+            "💡 *Tengo sed* — Я хочу пити\n"
+            "💡 *¡Buen provecho!* — Смачного!"
         ),
         "quiz": [
-            {"q": "Як буде 'хліб' іспанською?", "a": "el pan", "options": ["la leche", "el pan", "el agua", "el café"]},
-            {"q": "Що означає 'el pollo'?", "a": "курка", "options": ["риба", "яйце", "курка", "рис"]},
-            {"q": "Як сказати 'Я голодний'?", "a": "Tengo hambre", "options": ["Tengo sed", "Tengo hambre", "Tengo frío", "Tengo sueño"]},
+            {"q":"Як буде 'хліб'?","a":"el pan","wrong":["la leche","el agua","el café","el arroz","el vino"]},
+            {"q":"Що означає 'el pollo'?","a":"курка","wrong":["риба","яйце","рис","хліб","салат"]},
+            {"q":"Як сказати 'Я голодний'?","a":"Tengo hambre","wrong":["Tengo sed","Tengo frío","Tengo sueño","Tengo miedo","Tengo razón"]},
+            {"q":"Що означає 'el agua'?","a":"вода","wrong":["молоко","кава","вино","сік","чай"]},
+            {"q":"Як буде 'кава'?","a":"el café","wrong":["el vino","la leche","el agua","el pan","el arroz"]},
         ]
     },
     {
-        "id": 6,
-        "title": "🕐 Урок 6: Час і дні тижня",
+        "id": 6, "title": "🕐 Урок 6: Час і дні тижня",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 6: Час і дні тижня*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "*Дні тижня:*\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 6: Час і дні тижня*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
             "Пн *lunes* | Вт *martes* | Ср *miércoles*\n"
-            "Чт *jueves* | Пт *viernes*\n"
-            "Сб *sábado* | Нд *domingo*\n\n"
-            "*Час:*\n"
-            "• *¿Qué hora es?* — Котра година?\n"
+            "Чт *jueves* | Пт *viernes*\nСб *sábado* | Нд *domingo*\n\n"
+            "⏰ *¿Qué hora es?* — Котра година?\n"
             "• *Es la una* — Перша година\n"
             "• *Son las dos* — Друга година\n"
             "• *Son las tres y media* — Пів на четверту\n"
             "• *Son las cinco menos cuarto* — Без чверті п'ять\n\n"
-            "💡 *Запам'ятай:* 'es' для 1-ї год,\n"
-            "'son' для решти!"
+            "💡 'es' для 1-ї год, 'son' для решти!"
         ),
         "quiz": [
-            {"q": "Як буде 'понеділок' іспанською?", "a": "lunes", "options": ["martes", "lunes", "miércoles", "jueves"]},
-            {"q": "Що означає '¿Qué hora es?'", "a": "Котра година?", "options": ["Який день?", "Котра година?", "Яке число?", "Який рік?"]},
-            {"q": "Як сказати 'Друга година'?", "a": "Son las dos", "options": ["Es la dos", "Son las dos", "Es las dos", "Son la dos"]},
+            {"q":"Як буде 'понеділок'?","a":"lunes","wrong":["martes","miércoles","jueves","viernes","sábado"]},
+            {"q":"Що означає '¿Qué hora es?'","a":"Котра година?","wrong":["Який день?","Яке число?","Який рік?","Де ти?","Як справи?"]},
+            {"q":"Як сказати 'Друга година'?","a":"Son las dos","wrong":["Es la dos","Es las dos","Son la dos","Son dos","Es dos"]},
+            {"q":"Який день — 'viernes'?","a":"П'ятниця","wrong":["Четвер","Субота","Середа","Неділя","Понеділок"]},
+            {"q":"Як буде 'неділя'?","a":"domingo","wrong":["sábado","viernes","lunes","martes","jueves"]},
         ]
     },
     {
-        "id": 7,
-        "title": "🏠 Урок 7: Дієслово SER і ESTAR",
+        "id": 7, "title": "🔵 Урок 7: SER і ESTAR",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 7: SER і ESTAR*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 7: SER і ESTAR*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
             "Обидва = 'бути', але різні!\n\n"
-            "*SER* — постійні характеристики:\n"
-            "yo *soy* | tú *eres* | él/ella *es*\n"
+            "*SER* — постійні риси:\nyo *soy* | tú *eres* | él *es*\n"
             "nosotros *somos* | ellos *son*\n\n"
-            "*ESTAR* — тимчасовий стан, місце:\n"
-            "yo *estoy* | tú *estás* | él/ella *está*\n"
+            "*ESTAR* — стан, місце:\nyo *estoy* | tú *estás* | él *está*\n"
             "nosotros *estamos* | ellos *están*\n\n"
-            "💡 *SER:* Soy ucraniano. (Я українець)\n"
-            "💡 *ESTAR:* Estoy cansado. (Я втомлений)\n\n"
-            "🧠 *Правило:* 'де знаходиться?' = ESTAR\n"
-            "'хто такий / який за природою?' = SER"
+            "💡 *Soy ucraniano* — Я українець (SER)\n"
+            "💡 *Estoy cansado* — Я втомлений (ESTAR)\n"
+            "💡 *Está en casa* — Він вдома (ESTAR)"
         ),
         "quiz": [
-            {"q": "Яка форма SER для 'я'?", "a": "soy", "options": ["estoy", "soy", "eres", "es"]},
-            {"q": "Я втомлений = ?", "a": "Estoy cansado", "options": ["Soy cansado", "Estoy cansado", "Es cansado", "Estar cansado"]},
-            {"q": "Яке дієслово для постійних рис?", "a": "SER", "options": ["ESTAR", "SER", "TENER", "HACER"]},
+            {"q":"Яка форма SER для 'я'?","a":"soy","wrong":["estoy","eres","es","somos","son"]},
+            {"q":"Я втомлений = ?","a":"Estoy cansado","wrong":["Soy cansado","Es cansado","Estar cansado","Estás cansado","Som cansado"]},
+            {"q":"Яке дієслово для постійних рис?","a":"SER","wrong":["ESTAR","TENER","HACER","IR","PODER"]},
+            {"q":"Яка форма ESTAR для 'він'?","a":"está","wrong":["es","estoy","estás","estamos","están"]},
+            {"q":"Він вдома = ?","a":"Está en casa","wrong":["Es en casa","Estoy en casa","Son en casa","Ser en casa","Estás en casa"]},
         ]
     },
     {
-        "id": 8,
-        "title": "🚶 Урок 8: Дієслово TENER і вік",
+        "id": 8, "title": "🚶 Урок 8: TENER і вік",
         "theory": (
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "📖 *УРОК 8: TENER — мати*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "*Відмінювання TENER:*\n"
-            "yo *tengo* — я маю\n"
-            "tú *tienes* — ти маєш\n"
-            "él/ella *tiene* — він/вона має\n"
-            "nosotros *tenemos* — ми маємо\n"
-            "ellos *tienen* — вони мають\n\n"
-            "💡 *Вік через TENER:*\n"
-            "• *¿Cuántos años tienes?* — Скільки тобі років?\n"
-            "• *Tengo 30 años* — Мені 30 років\n\n"
-            "💡 *Інші вирази з TENER:*\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 8: TENER*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "yo *tengo* | tú *tienes* | él *tiene*\n"
+            "nosotros *tenemos* | ellos *tienen*\n\n"
+            "💡 *¿Cuántos años tienes?* — Скільки років?\n"
+            "💡 *Tengo 30 años* — Мені 30 років\n\n"
+            "*Вирази з TENER:*\n"
             "• *tener hambre* — бути голодним\n"
             "• *tener sed* — хотіти пити\n"
             "• *tener sueño* — хотіти спати\n"
-            "• *tener miedo* — боятися"
+            "• *tener miedo* — боятися\n"
+            "• *tener razón* — бути правим"
         ),
         "quiz": [
-            {"q": "Як сказати 'Мені 25 років'?", "a": "Tengo 25 años", "options": ["Soy 25 años", "Tengo 25 años", "Estoy 25 años", "Tiene 25 años"]},
-            {"q": "Яка форма TENER для 'вони'?", "a": "tienen", "options": ["tenemos", "tienen", "tiene", "tengo"]},
-            {"q": "Що означає 'tener sueño'?", "a": "хотіти спати", "options": ["боятися", "хотіти пити", "хотіти спати", "бути голодним"]},
+            {"q":"Як сказати 'Мені 25 років'?","a":"Tengo 25 años","wrong":["Soy 25 años","Estoy 25 años","Tiene 25 años","Tienes 25 años","Tenemos 25 años"]},
+            {"q":"Яка форма TENER для 'вони'?","a":"tienen","wrong":["tenemos","tiene","tengo","tienes","tener"]},
+            {"q":"Що означає 'tener sueño'?","a":"хотіти спати","wrong":["боятися","хотіти пити","бути голодним","бути правим","бути хворим"]},
+            {"q":"Яка форма TENER для 'ми'?","a":"tenemos","wrong":["tienen","tengo","tiene","tienes","tener"]},
+            {"q":"Як запитати 'Скільки тобі років?'","a":"¿Cuántos años tienes?","wrong":["¿Cómo estás?","¿Qué hora es?","¿Dónde vives?","¿Cómo te llamas?","¿Qué haces?"]},
+        ]
+    },
+    {
+        "id": 9, "title": "👤 Урок 9: Займенники",
+        "theory": (
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 9: Займенники*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "*Особові займенники:*\n"
+            "• *yo* — я\n• *tú* — ти (неформально)\n"
+            "• *él* — він\n• *ella* — вона\n"
+            "• *usted* — Ви (формально)\n"
+            "• *nosotros* — ми\n• *vosotros* — ви (Іспанія)\n"
+            "• *ellos* — вони (ч.р.)\n• *ellas* — вони (ж.р.)\n"
+            "• *ustedes* — ви (Латинська Америка)\n\n"
+            "💡 В іспанській займенники часто *опускають*:\n"
+            "• *Hablo español* = Я говорю іспанською\n"
+            "(замість Yo hablo español)"
+        ),
+        "quiz": [
+            {"q":"Як буде 'ми' іспанською?","a":"nosotros","wrong":["vosotros","ellos","ustedes","ellas","usted"]},
+            {"q":"Що означає 'ella'?","a":"вона","wrong":["він","ми","ви","вони","я"]},
+            {"q":"Яке 'ви' використовують у Латинській Америці?","a":"ustedes","wrong":["vosotros","usted","ellos","nosotros","tú"]},
+            {"q":"Як буде 'вони' (жіночий рід)?","a":"ellas","wrong":["ellos","ellas","ustedes","nosotras","vosotras"]},
+            {"q":"Що означає 'usted'?","a":"Ви (формально)","wrong":["ти","він","вона","ми","вони"]},
+        ]
+    },
+    {
+        "id": 10, "title": "📚 Урок 10: Теперішній час (-AR)",
+        "theory": (
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 10: Теперішній час (-AR)*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "Дієслова на *-AR* (hablar — говорити):\n\n"
+            "yo habl*o*\ntú habl*as*\nél/ella habl*a*\n"
+            "nosotros habl*amos*\nvosotros habl*áis*\nellos habl*an*\n\n"
+            "*Інші дієслова -AR:*\n"
+            "• *trabajar* — працювати\n• *estudiar* — вчитися\n"
+            "• *vivir* — жити ❌ (це -IR!)\n"
+            "• *caminar* — ходити\n• *comprar* — купувати\n\n"
+            "💡 Приклади:\n"
+            "• *Trabajo mucho* — Я багато працюю\n"
+            "• *Estudiamos español* — Ми вчимо іспанську"
+        ),
+        "quiz": [
+            {"q":"Яке закінчення 'hablar' для 'yo'?","a":"hablo","wrong":["hablas","habla","hablamos","habláis","hablan"]},
+            {"q":"Як сказати 'Ми вчимося'?","a":"Estudiamos","wrong":["Estudian","Estudia","Estudias","Estudio","Estudiais"]},
+            {"q":"Яке закінчення -AR для 'ellos'?","a":"-an","wrong":["-o","-as","-a","-amos","-áis"]},
+            {"q":"Як сказати 'Він купує'?","a":"Compra","wrong":["Compro","Compras","Compramos","Compran","Compráis"]},
+            {"q":"'Trabajar' означає?","a":"працювати","wrong":["говорити","вчитися","ходити","купувати","жити"]},
+        ]
+    },
+    {
+        "id": 11, "title": "📗 Урок 11: Дієслова -ER і -IR",
+        "theory": (
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 11: Дієслова -ER і -IR*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "*-ER* (comer — їсти):\nyo com*o* | tú com*es* | él com*e*\n"
+            "nosotros com*emos* | ellos com*en*\n\n"
+            "*-IR* (vivir — жити):\nyo viv*o* | tú viv*es* | él viv*e*\n"
+            "nosotros viv*imos* | ellos viv*en*\n\n"
+            "*Популярні дієслова:*\n"
+            "• *beber* — пити\n• *leer* — читати\n"
+            "• *escribir* — писати\n• *abrir* — відкривати\n\n"
+            "💡 *Como pizza* — Я їм піцу\n"
+            "💡 *Vivo en Polonia* — Я живу в Польщі"
+        ),
+        "quiz": [
+            {"q":"Яке закінчення -ER для 'tú'?","a":"-es","wrong":["-o","-e","-emos","-en","-as"]},
+            {"q":"Як сказати 'Я живу в Польщі'?","a":"Vivo en Polonia","wrong":["Vives en Polonia","Vive en Polonia","Vivimos en Polonia","Vivir en Polonia","Vivío en Polonia"]},
+            {"q":"'Leer' означає?","a":"читати","wrong":["писати","пити","їсти","відкривати","говорити"]},
+            {"q":"Яке закінчення -IR для 'nosotros'?","a":"-imos","wrong":["-amos","-emos","-en","-is","-an"]},
+            {"q":"Як сказати 'Вони п'ють'?","a":"Beben","wrong":["Bebe","Bebes","Bebemos","Bebo","Bebéis"]},
+        ]
+    },
+    {
+        "id": 12, "title": "🔊 Урок 12: Фонетика іспанської",
+        "theory": (
+            "━━━━━━━━━━━━━━━━━━━━━━\n📖 *УРОК 12: Фонетика*\n━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "*Особливі звуки:*\n\n"
+            "🔤 *ñ* = [нь] — España, mañana\n"
+            "🔤 *ll* = [й] — llamar, llover\n"
+            "🔤 *rr* = [р, вібрант] — perro, carro\n"
+            "🔤 *h* = мовчить — hola, hacer\n"
+            "🔤 *j* = [х] — jardín, jugar\n"
+            "🔤 *c+e/i* = [с] або [θ] — ciudad, cerro\n"
+            "🔤 *g+e/i* = [х] — gente, gitano\n"
+            "🔤 *qu* = [к] — queso, querer\n\n"
+            "💡 *mañana* = завтра / ранок\n"
+            "💡 *España* = Іспанія\n"
+            "💡 *perro* = собака (котиться R!)"
+        ),
+        "quiz": [
+            {"q":"Як читається 'h' в іспанській?","a":"Мовчить","wrong":["як [х]","як [г]","як [h]","як [ф]","як [в]"]},
+            {"q":"Як читається 'ñ'?","a":"[нь]","wrong":["[н]","[м]","[ж]","[й]","[х]"]},
+            {"q":"Що означає 'mañana'?","a":"завтра / ранок","wrong":["вечір","сьогодні","місяць","рік","тиждень"]},
+            {"q":"Як читається 'j' в іспанській?","a":"[х]","wrong":["[дж]","[ж]","[й]","[г]","мовчить"]},
+            {"q":"'ll' читається як?","a":"[й]","wrong":["[л]","[лл]","[в]","[х]","[н]"]},
         ]
     },
 ]
 
 FLASHCARDS = [
-    # Базові слова
-    {"es": "hola", "ua": "привіт", "category": "привітання"},
-    {"es": "gracias", "ua": "дякую", "category": "ввічливість"},
-    {"es": "por favor", "ua": "будь ласка", "category": "ввічливість"},
-    {"es": "sí", "ua": "так", "category": "базові"},
-    {"es": "no", "ua": "ні", "category": "базові"},
-    {"es": "perdón", "ua": "вибачте", "category": "ввічливість"},
-    {"es": "de nada", "ua": "нема за що", "category": "ввічливість"},
-    # Числа
-    {"es": "uno", "ua": "один", "category": "числа"},
-    {"es": "dos", "ua": "два", "category": "числа"},
-    {"es": "tres", "ua": "три", "category": "числа"},
-    {"es": "diez", "ua": "десять", "category": "числа"},
-    {"es": "veinte", "ua": "двадцять", "category": "числа"},
-    {"es": "cien", "ua": "сто", "category": "числа"},
-    # Кольори
-    {"es": "rojo", "ua": "червоний", "category": "кольори"},
-    {"es": "azul", "ua": "синій", "category": "кольори"},
-    {"es": "verde", "ua": "зелений", "category": "кольори"},
-    {"es": "negro", "ua": "чорний", "category": "кольори"},
-    {"es": "blanco", "ua": "білий", "category": "кольори"},
-    {"es": "amarillo", "ua": "жовтий", "category": "кольори"},
-    # Їжа
-    {"es": "el pan", "ua": "хліб", "category": "їжа"},
-    {"es": "el agua", "ua": "вода", "category": "їжа"},
-    {"es": "el café", "ua": "кава", "category": "їжа"},
-    {"es": "el pollo", "ua": "курка", "category": "їжа"},
-    {"es": "la leche", "ua": "молоко", "category": "їжа"},
-    {"es": "el arroz", "ua": "рис", "category": "їжа"},
-    # Родина
-    {"es": "la madre", "ua": "мати", "category": "родина"},
-    {"es": "el padre", "ua": "батько", "category": "родина"},
-    {"es": "el hermano", "ua": "брат", "category": "родина"},
-    {"es": "la hermana", "ua": "сестра", "category": "родина"},
-    # Дієслова
-    {"es": "hablar", "ua": "говорити", "category": "дієслова"},
-    {"es": "comer", "ua": "їсти", "category": "дієслова"},
-    {"es": "vivir", "ua": "жити", "category": "дієслова"},
-    {"es": "trabajar", "ua": "працювати", "category": "дієслова"},
-    {"es": "estudiar", "ua": "вчитися", "category": "дієслова"},
-    {"es": "ir", "ua": "йти/їхати", "category": "дієслова"},
-    {"es": "tener", "ua": "мати", "category": "дієслова"},
-    {"es": "ser", "ua": "бути (постійно)", "category": "дієслова"},
-    {"es": "estar", "ua": "бути (тимчасово)", "category": "дієслова"},
-    # Місця
-    {"es": "la casa", "ua": "будинок", "category": "місця"},
-    {"es": "la ciudad", "ua": "місто", "category": "місця"},
-    {"es": "la calle", "ua": "вулиця", "category": "місця"},
-    {"es": "el trabajo", "ua": "робота", "category": "місця"},
-    {"es": "la tienda", "ua": "магазин", "category": "місця"},
-    # Транспорт
-    {"es": "el coche", "ua": "машина", "category": "транспорт"},
-    {"es": "el autobús", "ua": "автобус", "category": "транспорт"},
-    {"es": "el tren", "ua": "поїзд", "category": "транспорт"},
-    {"es": "la bicicleta", "ua": "велосипед", "category": "транспорт"},
+    {"es":"hola","ua":"привіт","cat":"привітання"},
+    {"es":"gracias","ua":"дякую","cat":"ввічливість"},
+    {"es":"por favor","ua":"будь ласка","cat":"ввічливість"},
+    {"es":"sí","ua":"так","cat":"базові"},
+    {"es":"no","ua":"ні","cat":"базові"},
+    {"es":"perdón","ua":"вибачте","cat":"ввічливість"},
+    {"es":"de nada","ua":"нема за що","cat":"ввічливість"},
+    {"es":"uno","ua":"один","cat":"числа"},
+    {"es":"dos","ua":"два","cat":"числа"},
+    {"es":"tres","ua":"три","cat":"числа"},
+    {"es":"diez","ua":"десять","cat":"числа"},
+    {"es":"veinte","ua":"двадцять","cat":"числа"},
+    {"es":"cien","ua":"сто","cat":"числа"},
+    {"es":"rojo","ua":"червоний","cat":"кольори"},
+    {"es":"azul","ua":"синій","cat":"кольори"},
+    {"es":"verde","ua":"зелений","cat":"кольори"},
+    {"es":"negro","ua":"чорний","cat":"кольори"},
+    {"es":"blanco","ua":"білий","cat":"кольори"},
+    {"es":"amarillo","ua":"жовтий","cat":"кольори"},
+    {"es":"el pan","ua":"хліб","cat":"їжа"},
+    {"es":"el agua","ua":"вода","cat":"їжа"},
+    {"es":"el café","ua":"кава","cat":"їжа"},
+    {"es":"el pollo","ua":"курка","cat":"їжа"},
+    {"es":"la leche","ua":"молоко","cat":"їжа"},
+    {"es":"el arroz","ua":"рис","cat":"їжа"},
+    {"es":"la madre","ua":"мати","cat":"родина"},
+    {"es":"el padre","ua":"батько","cat":"родина"},
+    {"es":"el hermano","ua":"брат","cat":"родина"},
+    {"es":"la hermana","ua":"сестра","cat":"родина"},
+    {"es":"hablar","ua":"говорити","cat":"дієслова"},
+    {"es":"comer","ua":"їсти","cat":"дієслова"},
+    {"es":"vivir","ua":"жити","cat":"дієслова"},
+    {"es":"trabajar","ua":"працювати","cat":"дієслова"},
+    {"es":"estudiar","ua":"вчитися","cat":"дієслова"},
+    {"es":"beber","ua":"пити","cat":"дієслова"},
+    {"es":"leer","ua":"читати","cat":"дієслова"},
+    {"es":"escribir","ua":"писати","cat":"дієслова"},
+    {"es":"tener","ua":"мати","cat":"дієслова"},
+    {"es":"ser","ua":"бути (постійно)","cat":"дієслова"},
+    {"es":"estar","ua":"бути (тимчасово)","cat":"дієслова"},
+    {"es":"yo","ua":"я","cat":"займенники"},
+    {"es":"tú","ua":"ти","cat":"займенники"},
+    {"es":"él","ua":"він","cat":"займенники"},
+    {"es":"ella","ua":"вона","cat":"займенники"},
+    {"es":"nosotros","ua":"ми","cat":"займенники"},
+    {"es":"ellos","ua":"вони","cat":"займенники"},
+    {"es":"la casa","ua":"будинок","cat":"місця"},
+    {"es":"la ciudad","ua":"місто","cat":"місця"},
+    {"es":"el trabajo","ua":"робота","cat":"місця"},
+    {"es":"la tienda","ua":"магазин","cat":"місця"},
 ]
 
 # ══════════════════════════════════════════════════════════
-# БАЗА ДАНИХ КОРИСТУВАЧІВ (in-memory)
+# БАЗА ДАНИХ
 # ══════════════════════════════════════════════════════════
-
 users_db = {}
 
-def get_user(user_id: int) -> dict:
-    uid = str(user_id)
-    if uid not in users_db:
-        users_db[uid] = {
-            "xp": 0,
-            "streak": 0,
-            "last_activity": None,
-            "completed_lessons": [],
-            "quiz_scores": {},
-            "flashcard_index": 0,
-            "known_cards": [],
-            "state": None,
-            "current_quiz": None,
-            "quiz_q_index": 0,
-            "quiz_correct": 0,
+def get_user(uid):
+    k = str(uid)
+    if k not in users_db:
+        users_db[k] = {
+            "xp": 0, "streak": 0, "last_date": None,
+            "completed_lessons": [], "known_cards": [],
+            "flash_idx": 0, "notify_hour": 9, "notify_enabled": True,
+            "quiz": None, "quiz_idx": 0, "quiz_correct": 0,
+            "game_mode": None, "game_cards": [], "game_idx": 0,
+            "game_correct": 0, "waiting_input": None,
         }
-    return users_db[uid]
+    return users_db[k]
 
-def add_xp(user_id: int, amount: int):
-    u = get_user(user_id)
+def add_xp(uid, amount):
+    from datetime import date
+    u = get_user(uid)
     u["xp"] += amount
-    today = datetime.now().date().isoformat()
-    if u["last_activity"] != today:
+    today = date.today().isoformat()
+    if u["last_date"] != today:
         u["streak"] += 1
-        u["last_activity"] = today
+        u["last_date"] = today
 
-def get_level(xp: int) -> tuple:
+def get_level(xp):
     levels = [
-        (0,   "🥚 Початківець"),
-        (100, "🐣 Новачок"),
-        (300, "📚 Студент"),
-        (600, "🎓 Учень"),
-        (1000,"⭐ Знавець"),
-        (1500,"🌟 Майстер"),
-        (2500,"🏆 Експерт"),
+        (0,"🥚 Початківець",100),(100,"🐣 Новачок",300),(300,"📚 Студент",600),
+        (600,"🎓 Учень",1000),(1000,"⭐ Знавець",1500),(1500,"🌟 Майстер",2500),(2500,"🏆 Експерт",9999),
     ]
-    for i in range(len(levels)-1, -1, -1):
-        if xp >= levels[i][0]:
-            return levels[i][1], levels[i+1][0] if i < len(levels)-1 else xp
-    return levels[0][1], levels[1][0]
+    for i,(min_xp,name,max_xp) in enumerate(levels):
+        if xp < max_xp:
+            return name, min_xp, max_xp
+    return levels[-1][1], 2500, 9999
 
 # ══════════════════════════════════════════════════════════
 # КЛАВІАТУРИ
 # ══════════════════════════════════════════════════════════
-
-def main_menu_kb():
+def main_kb():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📖 Уроки", callback_data="menu_lessons"),
          InlineKeyboardButton("🃏 Флешкарти", callback_data="menu_flash")],
         [InlineKeyboardButton("🧠 Квіз", callback_data="menu_quiz"),
-         InlineKeyboardButton("📊 Прогрес", callback_data="menu_progress")],
-        [InlineKeyboardButton("📝 Словник", callback_data="menu_vocab")],
+         InlineKeyboardButton("🎮 Гра", callback_data="menu_game")],
+        [InlineKeyboardButton("📊 Прогрес", callback_data="menu_progress"),
+         InlineKeyboardButton("🔔 Нагадування", callback_data="menu_notify")],
     ])
 
-def back_kb(to="menu_main"):
-    return InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Назад", callback_data=to)]])
+def back_kb():
+    return InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Головне меню", callback_data="menu_main")]])
 
 # ══════════════════════════════════════════════════════════
 # HANDLERS
 # ══════════════════════════════════════════════════════════
-
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     get_user(user.id)
-    text = (
+    await update.message.reply_text(
         f"🇪🇸 *¡Hola, {user.first_name}!*\n\n"
         "Ласкаво просимо до бота для вивчення іспанської!\n\n"
-        "Тут ти знайдеш:\n"
         "📖 *Уроки* — теорія з нуля\n"
-        "🃏 *Флешкарти* — слова з перекладом\n"
-        "🧠 *Квіз* — перевір себе\n"
-        "📊 *Прогрес* — твої досягнення\n\n"
-        "З чого починаємо? 👇"
+        "🃏 *Флешкарти* — слова\n"
+        "🧠 *Квіз* — перевір знання\n"
+        "🎮 *Гра* — вчи слова як у Duolingo\n"
+        "🔔 *Нагадування* — щоденні пуші\n\n"
+        "З чого починаємо? 👇",
+        parse_mode="Markdown", reply_markup=main_kb()
     )
-    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=main_menu_kb())
 
 async def handle_callback(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
     data = q.data
     uid = q.from_user.id
+    u = get_user(uid)
 
-    # ── ГОЛОВНЕ МЕНЮ ──────────────────────────────────────
+    # ── МЕНЮ ──────────────────────────────────────────────
     if data == "menu_main":
         await q.edit_message_text(
             "🇪🇸 *Головне меню*\n\nОбирай що хочеш робити:",
-            parse_mode="Markdown", reply_markup=main_menu_kb()
+            parse_mode="Markdown", reply_markup=main_kb()
         )
 
     # ── УРОКИ ─────────────────────────────────────────────
     elif data == "menu_lessons":
-        u = get_user(uid)
         rows = []
-        for i, l in enumerate(LESSONS):
+        for l in LESSONS:
             done = l["id"] in u["completed_lessons"]
-            mark = "✅" if done else f"{l['id']}."
+            mark = "✅" if done else "▸"
             rows.append([InlineKeyboardButton(f"{mark} {l['title']}", callback_data=f"lesson_{l['id']}")])
         rows.append([InlineKeyboardButton("◀️ Назад", callback_data="menu_main")])
-        await q.edit_message_text(
-            "📖 *Уроки*\n\nОбирай урок:",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(rows)
-        )
+        await q.edit_message_text("📖 *Уроки*\n\nОбирай урок:", parse_mode="Markdown",
+                                   reply_markup=InlineKeyboardMarkup(rows))
 
     elif data.startswith("lesson_"):
         lid = int(data.split("_")[1])
         lesson = next(l for l in LESSONS if l["id"] == lid)
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🧠 Пройти квіз по уроку", callback_data=f"quiz_lesson_{lid}")],
+            [InlineKeyboardButton("🧠 Пройти квіз", callback_data=f"quiz_lesson_{lid}")],
             [InlineKeyboardButton("◀️ До уроків", callback_data="menu_lessons")],
         ])
         await q.edit_message_text(lesson["theory"], parse_mode="Markdown", reply_markup=kb)
 
     # ── ФЛЕШКАРТИ ─────────────────────────────────────────
     elif data == "menu_flash":
-        await show_flashcard(q, uid, mode="es")
+        await show_flashcard(q, uid)
 
-    elif data.startswith("flash_"):
-        action = data.split("_")[1]
-        u = get_user(uid)
-        if action == "show":
-            await show_flashcard(q, uid, reveal=True)
-        elif action == "know":
-            idx = u["flashcard_index"]
-            card = FLASHCARDS[idx % len(FLASHCARDS)]
-            if card["es"] not in u["known_cards"]:
-                u["known_cards"].append(card["es"])
+    elif data == "flash_show":
+        await show_flashcard(q, uid, reveal=True)
+
+    elif data == "flash_know":
+        card = FLASHCARDS[u["flash_idx"] % len(FLASHCARDS)]
+        if card["es"] not in u["known_cards"]:
+            u["known_cards"].append(card["es"])
             add_xp(uid, 5)
-            u["flashcard_index"] = (idx + 1) % len(FLASHCARDS)
-            await show_flashcard(q, uid, mode="es")
-        elif action == "learn":
-            u["flashcard_index"] = (u["flashcard_index"] + 1) % len(FLASHCARDS)
-            await show_flashcard(q, uid, mode="es")
-        elif action == "random":
-            u["flashcard_index"] = random.randint(0, len(FLASHCARDS)-1)
-            await show_flashcard(q, uid, mode="es")
+        u["flash_idx"] = (u["flash_idx"] + 1) % len(FLASHCARDS)
+        await show_flashcard(q, uid)
+
+    elif data == "flash_next":
+        u["flash_idx"] = (u["flash_idx"] + 1) % len(FLASHCARDS)
+        await show_flashcard(q, uid)
+
+    elif data == "flash_random":
+        u["flash_idx"] = random.randint(0, len(FLASHCARDS) - 1)
+        await show_flashcard(q, uid)
 
     # ── КВІЗ ──────────────────────────────────────────────
     elif data == "menu_quiz":
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton(f"{l['title']}", callback_data=f"quiz_lesson_{l['id']}")]
-            for l in LESSONS
-        ] + [[InlineKeyboardButton("🎲 Випадковий", callback_data="quiz_random")],
-             [InlineKeyboardButton("◀️ Назад", callback_data="menu_main")]])
-        await q.edit_message_text("🧠 *Квіз*\n\nОбирай тему:", parse_mode="Markdown", reply_markup=kb)
+        rows = [[InlineKeyboardButton(l["title"], callback_data=f"quiz_lesson_{l['id']}")] for l in LESSONS]
+        rows.append([InlineKeyboardButton("🎲 Випадковий", callback_data="quiz_random")])
+        rows.append([InlineKeyboardButton("◀️ Назад", callback_data="menu_main")])
+        await q.edit_message_text("🧠 *Квіз*\n\nОбирай тему:", parse_mode="Markdown",
+                                   reply_markup=InlineKeyboardMarkup(rows))
 
     elif data.startswith("quiz_lesson_") or data == "quiz_random":
         if data == "quiz_random":
@@ -450,194 +465,330 @@ async def handle_callback(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         else:
             lid = int(data.split("_")[2])
             lesson = next(l for l in LESSONS if l["id"] == lid)
-        u = get_user(uid)
-        u["current_quiz"] = lesson["quiz"]
-        u["quiz_q_index"] = 0
+        u["quiz"] = lesson
+        u["quiz_idx"] = 0
         u["quiz_correct"] = 0
-        await show_quiz_question(q, uid)
+        await show_quiz(q, uid)
 
     elif data == "quiz_next":
-        await show_quiz_question(q, uid)
+        await show_quiz(q, uid)
 
-    elif data.startswith("ans_"):
-        await handle_quiz_answer(q, uid, data)
+    elif data.startswith("qans_"):
+        await handle_quiz_answer(q, uid, data[5:])
 
     # ── ПРОГРЕС ───────────────────────────────────────────
     elif data == "menu_progress":
         u = get_user(uid)
-        level_name, next_xp = get_level(u["xp"])
-        bar_len = 10
-        if next_xp > 0:
-            filled = int((u["xp"] % next_xp) / next_xp * bar_len) if next_xp > u["xp"] else bar_len
-        else:
-            filled = bar_len
-        bar = "█" * filled + "░" * (bar_len - filled)
+        xp = u["xp"]
+        level, min_xp, max_xp = get_level(xp)
+        progress = xp - min_xp
+        total = max_xp - min_xp
+        filled = int(progress / total * 10) if total > 0 else 10
+        bar = "█" * filled + "░" * (10 - filled)
         lessons_done = len(u["completed_lessons"])
         cards_known = len(u["known_cards"])
-
         text = (
             f"📊 *Твій прогрес*\n\n"
-            f"🏅 Рівень: *{level_name}*\n"
-            f"⭐ XP: *{u['xp']}*\n"
-            f"[{bar}]\n\n"
-            f"🔥 Серія днів: *{u['streak']}*\n"
-            f"📖 Уроків пройдено: *{lessons_done}/{len(LESSONS)}*\n"
+            f"🏅 Рівень: *{level}*\n"
+            f"⭐ XP: *{xp}*\n"
+            f"[{bar}] {progress}/{total}\n\n"
+            f"🔥 Серія: *{u['streak']} днів*\n"
+            f"📖 Уроків: *{lessons_done}/{len(LESSONS)}*\n"
             f"🃏 Слів вивчено: *{cards_known}/{len(FLASHCARDS)}*\n\n"
         )
         if lessons_done == 0:
             text += "💡 Починай з першого уроку!"
         elif lessons_done < len(LESSONS):
-            text += f"💪 Продовжуй! Ще {len(LESSONS)-lessons_done} уроків"
+            text += f"💪 Ще {len(LESSONS) - lessons_done} уроків!"
         else:
             text += "🎉 Усі уроки пройдено! ¡Fantástico!"
-
         await q.edit_message_text(text, parse_mode="Markdown", reply_markup=back_kb())
 
-    # ── СЛОВНИК ───────────────────────────────────────────
-    elif data == "menu_vocab":
-        categories = {}
-        for c in FLASHCARDS:
-            cat = c["category"]
-            if cat not in categories:
-                categories[cat] = []
-            categories[cat].append(c)
+    # ── НАГАДУВАННЯ ───────────────────────────────────────
+    elif data == "menu_notify":
+        status = "🟢 Увімкнено" if u["notify_enabled"] else "🔴 Вимкнено"
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🔔 Увімкнути" if not u["notify_enabled"] else "🔕 Вимкнути",
+                                  callback_data="notify_toggle")],
+            [InlineKeyboardButton("⏰ Змінити час", callback_data="notify_time")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="menu_main")],
+        ])
+        await q.edit_message_text(
+            f"🔔 *Нагадування*\n\nСтатус: {status}\n"
+            f"Час: *{u['notify_hour']:02d}:00*\n\n"
+            "Щодня о вказаний час я нагадаю вчити іспанську!",
+            parse_mode="Markdown", reply_markup=kb
+        )
 
-        text = "📝 *Словник*\n\n"
-        for cat, words in categories.items():
-            text += f"*{cat.capitalize()}:*\n"
-            for w in words[:5]:
-                text += f"  • {w['es']} — {w['ua']}\n"
-            if len(words) > 5:
-                text += f"  _...та ще {len(words)-5}_\n"
-            text += "\n"
+    elif data == "notify_toggle":
+        u["notify_enabled"] = not u["notify_enabled"]
+        status = "🟢 Увімкнено" if u["notify_enabled"] else "🔴 Вимкнено"
+        await q.edit_message_text(
+            f"✅ Нагадування: *{status}*",
+            parse_mode="Markdown", reply_markup=back_kb()
+        )
 
-        await q.edit_message_text(text, parse_mode="Markdown", reply_markup=back_kb())
+    elif data == "notify_time":
+        hours = [[InlineKeyboardButton(f"{h:02d}:00", callback_data=f"notifyset_{h}") for h in range(i, i+4)]
+                 for i in range(7, 23, 4)]
+        hours.append([InlineKeyboardButton("◀️ Назад", callback_data="menu_notify")])
+        await q.edit_message_text("⏰ Обери час нагадування:",
+                                   reply_markup=InlineKeyboardMarkup(hours))
+
+    elif data.startswith("notifyset_"):
+        hour = int(data.split("_")[1])
+        u["notify_hour"] = hour
+        await q.edit_message_text(
+            f"✅ Нагадування встановлено на *{hour:02d}:00*",
+            parse_mode="Markdown", reply_markup=back_kb()
+        )
+
+    # ── ІГРОВИЙ РЕЖИМ ─────────────────────────────────────
+    elif data == "menu_game":
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🎯 Вгадай переклад", callback_data="game_mc")],
+            [InlineKeyboardButton("✍️ Напиши слово", callback_data="game_write")],
+            [InlineKeyboardButton("◀️ Назад", callback_data="menu_main")],
+        ])
+        await q.edit_message_text(
+            "🎮 *Ігровий режим*\n\nОбери тип гри:",
+            parse_mode="Markdown", reply_markup=kb
+        )
+
+    elif data in ("game_mc", "game_write"):
+        cards = FLASHCARDS.copy()
+        random.shuffle(cards)
+        u["game_mode"] = data
+        u["game_cards"] = cards[:15]
+        u["game_idx"] = 0
+        u["game_correct"] = 0
+        await show_game(q, uid)
+
+    elif data.startswith("gans_"):
+        await handle_game_answer(q, uid, data[5:])
+
+    elif data == "game_next":
+        await show_game(q, uid)
 
 
-async def show_flashcard(q, uid: int, reveal=False, mode="es"):
+async def show_flashcard(q, uid, reveal=False):
     u = get_user(uid)
-    idx = u["flashcard_index"] % len(FLASHCARDS)
+    idx = u["flash_idx"] % len(FLASHCARDS)
     card = FLASHCARDS[idx]
-    total = len(FLASHCARDS)
     known = len(u["known_cards"])
 
     if not reveal:
-        text = (
-            f"🃏 *Флешкарта {idx+1}/{total}*\n"
-            f"_Категорія: {card['category']}_\n\n"
-            f"🇪🇸 *{card['es']}*\n\n"
-            f"Знаєш переклад?"
-        )
+        text = (f"🃏 *Флешкарта {idx+1}/{len(FLASHCARDS)}*\n"
+                f"_{card['cat']}_\n\n🇪🇸 *{card['es']}*\n\nЗнаєш переклад?")
         kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("👁 Показати переклад", callback_data="flash_show")],
-            [InlineKeyboardButton("➡️ Пропустити", callback_data="flash_learn"),
+            [InlineKeyboardButton("👁 Показати", callback_data="flash_show")],
+            [InlineKeyboardButton("➡️ Далі", callback_data="flash_next"),
              InlineKeyboardButton("🎲 Випадкова", callback_data="flash_random")],
             [InlineKeyboardButton("◀️ Меню", callback_data="menu_main")],
         ])
     else:
         is_known = card["es"] in u["known_cards"]
-        text = (
-            f"🃏 *Флешкарта {idx+1}/{total}*\n"
-            f"_Категорія: {card['category']}_\n\n"
-            f"🇪🇸 *{card['es']}*\n"
-            f"🇺🇦 *{card['ua']}*\n\n"
-            f"✅ Вивчено: {known}/{total}"
-        )
+        text = (f"🃏 *Флешкарта {idx+1}/{len(FLASHCARDS)}*\n"
+                f"_{card['cat']}_\n\n🇪🇸 *{card['es']}*\n🇺🇦 *{card['ua']}*\n\n"
+                f"✅ Вивчено: {known}/{len(FLASHCARDS)}")
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ Знаю!", callback_data="flash_know"),
-             InlineKeyboardButton("🔄 Вчити ще", callback_data="flash_learn")],
+             InlineKeyboardButton("🔄 Далі", callback_data="flash_next")],
             [InlineKeyboardButton("◀️ Меню", callback_data="menu_main")],
         ])
-
     await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
 
 
-async def show_quiz_question(q, uid: int):
+async def show_quiz(q, uid):
     u = get_user(uid)
-    quiz = u["current_quiz"]
-    qi = u["quiz_q_index"]
+    lesson = u["quiz"]
+    qi = u["quiz_idx"]
+    questions = lesson["quiz"]
 
-    if qi >= len(quiz):
-        # Квіз завершено
+    if qi >= len(questions):
         correct = u["quiz_correct"]
-        total = len(quiz)
-        xp_earned = correct * 20
-        add_xp(uid, xp_earned)
-
+        total = len(questions)
+        xp = correct * 20
+        add_xp(uid, xp)
+        if lesson["id"] not in u["completed_lessons"]:
+            u["completed_lessons"].append(lesson["id"])
         pct = int(correct / total * 100)
-        if pct == 100:
-            result = "🏆 Ідеально! ¡Perfecto!"
-        elif pct >= 66:
-            result = "👍 Добре! ¡Muy bien!"
-        else:
-            result = "📚 Треба повторити! ¡Practica más!"
-
-        text = (
+        emoji = "🏆" if pct == 100 else "👍" if pct >= 60 else "📚"
+        await q.edit_message_text(
             f"✅ *Квіз завершено!*\n\n"
-            f"Правильних відповідей: *{correct}/{total}*\n"
-            f"Результат: {pct}%\n\n"
-            f"{result}\n\n"
-            f"⭐ +{xp_earned} XP"
+            f"Правильно: *{correct}/{total}* ({pct}%)\n"
+            f"{emoji} {'¡Perfecto!' if pct==100 else '¡Bien!' if pct>=60 else 'Practíca más!'}\n\n"
+            f"⭐ +{xp} XP отримано!",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔄 Ще раз", callback_data="menu_quiz")],
+                [InlineKeyboardButton("◀️ Меню", callback_data="menu_main")],
+            ])
         )
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔄 Ще раз", callback_data="menu_quiz")],
-            [InlineKeyboardButton("◀️ Меню", callback_data="menu_main")],
-        ])
-        await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
         return
 
-    question = quiz[qi]
-    options = question["options"].copy()
+    q_data = questions[qi]
+    # Рандомно вибираємо 3 неправильних з доступних wrong варіантів
+    wrong = random.sample(q_data["wrong"], min(3, len(q_data["wrong"])))
+    options = wrong + [q_data["a"]]
     random.shuffle(options)
 
-    text = (
-        f"🧠 *Питання {qi+1}/{len(quiz)}*\n\n"
-        f"{question['q']}"
+    kb = InlineKeyboardMarkup([[InlineKeyboardButton(opt, callback_data=f"qans_{opt}")] for opt in options])
+    await q.edit_message_text(
+        f"🧠 *Питання {qi+1}/{len(questions)}*\n\n{q_data['q']}",
+        parse_mode="Markdown", reply_markup=kb
     )
-    kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton(opt, callback_data=f"ans_{opt}")] for opt in options
-    ])
-    await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
 
 
-async def handle_quiz_answer(q, uid: int, data: str):
-    answer = data[4:]  # remove "ans_"
+async def handle_quiz_answer(q, uid, answer):
     u = get_user(uid)
-    quiz = u["current_quiz"]
-    qi = u["quiz_q_index"]
-    question = quiz[qi]
-
-    if answer == question["a"]:
+    lesson = u["quiz"]
+    qi = u["quiz_idx"]
+    q_data = lesson["quiz"][qi]
+    correct = answer == q_data["a"]
+    if correct:
         u["quiz_correct"] += 1
-        feedback = "✅ *Правильно!* ¡Correcto!"
+        text = f"✅ *Правильно!* ¡Correcto!\n\n_{q_data['q']}_\n➡️ *{q_data['a']}*"
     else:
-        feedback = f"❌ *Неправильно.*\nПравильна відповідь: *{question['a']}*"
-
-    u["quiz_q_index"] += 1
-
-    # Mark lesson as completed if this was lesson quiz
-    # (simplified: mark based on quiz content match)
-
-    text = f"{feedback}\n\n_Питання {qi+1} з {len(quiz)}_"
-    kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("➡️ Далі", callback_data="quiz_next")]
-    ])
-    await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
+        text = f"❌ *Неправильно.*\n\n_{q_data['q']}_\n✅ *{q_data['a']}*"
+    u["quiz_idx"] += 1
+    await q.edit_message_text(text, parse_mode="Markdown",
+                               reply_markup=InlineKeyboardMarkup([[
+                                   InlineKeyboardButton("➡️ Далі", callback_data="quiz_next")
+                               ]]))
 
 
-async def handle_callback_quiz_next(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    pass  # handled in main callback
+async def show_game(q, uid):
+    u = get_user(uid)
+    cards = u["game_cards"]
+    gi = u["game_idx"]
+
+    if gi >= len(cards):
+        correct = u["game_correct"]
+        total = len(cards)
+        xp = correct * 10
+        add_xp(uid, xp)
+        pct = int(correct / total * 100)
+        await q.edit_message_text(
+            f"🎮 *Гру завершено!*\n\n"
+            f"Правильно: *{correct}/{total}* ({pct}%)\n"
+            f"⭐ +{xp} XP\n\n"
+            f"{'🏆 ¡Excelente!' if pct==100 else '👍 ¡Bien!' if pct>=60 else '💪 Practíca más!'}",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔄 Грати знову", callback_data=u["game_mode"])],
+                [InlineKeyboardButton("◀️ Меню", callback_data="menu_main")],
+            ])
+        )
+        return
+
+    card = cards[gi]
+    mode = u["game_mode"]
+
+    if mode == "game_mc":
+        # Режим: вгадай переклад — 4 варіанти
+        all_ua = [c["ua"] for c in FLASHCARDS if c["ua"] != card["ua"]]
+        wrong3 = random.sample(all_ua, 3)
+        options = wrong3 + [card["ua"]]
+        random.shuffle(options)
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(opt, callback_data=f"gans_{opt}")] for opt in options])
+        await q.edit_message_text(
+            f"🎮 *Гра {gi+1}/{len(cards)}*\n\n🇪🇸 *{card['es']}*\n\nЯк перекласти?",
+            parse_mode="Markdown", reply_markup=kb
+        )
+    else:
+        # Режим: напиши слово
+        u["waiting_input"] = {"type": "game_write", "answer": card["es"], "ua": card["ua"]}
+        await q.edit_message_text(
+            f"✍️ *Гра {gi+1}/{len(cards)}*\n\n🇺🇦 *{card['ua']}*\n\nНапиши іспанською:",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("⏭ Пропустити", callback_data="gans_SKIP")
+            ]])
+        )
 
 
+async def handle_game_answer(q, uid, answer):
+    u = get_user(uid)
+    card = u["game_cards"][u["game_idx"]]
+    correct_ans = card["ua"] if u["game_mode"] == "game_mc" else card["es"]
+    correct = answer == correct_ans
 
+    if answer == "SKIP":
+        text = f"⏭ *Пропущено*\n\n✅ Правильно: *{correct_ans}*"
+    elif correct:
+        u["game_correct"] += 1
+        text = f"✅ *Правильно!* ¡Correcto!"
+    else:
+        text = f"❌ *Неправильно.*\n✅ Правильно: *{correct_ans}*"
+
+    u["game_idx"] += 1
+    u["waiting_input"] = None
+    await q.edit_message_text(text, parse_mode="Markdown",
+                               reply_markup=InlineKeyboardMarkup([[
+                                   InlineKeyboardButton("➡️ Далі", callback_data="game_next")
+                               ]]))
+
+
+async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    uid = update.effective_user.id
+    u = get_user(uid)
+    text = update.message.text.strip()
+    wi = u.get("waiting_input")
+
+    if wi and wi["type"] == "game_write":
+        correct = text.lower().strip() == wi["answer"].lower().strip()
+        if correct:
+            u["game_correct"] += 1
+            reply = f"✅ *Правильно!* ¡Correcto!\n_{wi['ua']}_ = *{wi['answer']}*"
+        else:
+            reply = f"❌ *Неправильно.*\nТи написав: _{text}_\n✅ Правильно: *{wi['answer']}*"
+        u["game_idx"] += 1
+        u["waiting_input"] = None
+        await update.message.reply_text(reply, parse_mode="Markdown",
+                                         reply_markup=InlineKeyboardMarkup([[
+                                             InlineKeyboardButton("➡️ Далі", callback_data="game_next")
+                                         ]]))
+    else:
+        await update.message.reply_text("Головне меню 👇", reply_markup=main_kb())
+
+
+# ══════════════════════════════════════════════════════════
+# ЩОДЕННІ НАГАДУВАННЯ
+# ══════════════════════════════════════════════════════════
+REMINDERS = [
+    "🇪🇸 *¡Buenos días!* Час вчити іспанську! Сьогодні 5 хвилин — і ти ближче до fluency! 💪",
+    "🌟 *¡Hola!* Не забудь про свій урок іспанської сьогодні! Серія чекає! 🔥",
+    "📚 Слово дня: *mañana* = завтра/ранок. Використай його сьогодні! 🇪🇸",
+    "🎯 *¡Ánimo!* (Давай!) Твій щоденний урок іспанської чекає! 💃",
+    "⭐ Ти вже так далеко зайшов! Не переривай серію — вчи іспанську сьогодні! 🇪🇸",
+]
+
+async def send_daily_reminders(app):
+    while True:
+        from datetime import datetime
+        now = datetime.now()
+        for uid, u in users_db.items():
+            if u["notify_enabled"] and now.hour == u["notify_hour"] and now.minute == 0:
+                try:
+                    msg = random.choice(REMINDERS)
+                    await app.bot.send_message(
+                        chat_id=int(uid), text=msg,
+                        parse_mode="Markdown", reply_markup=main_kb()
+                    )
+                except Exception:
+                    pass
+        await asyncio.sleep(60)
 
 
 if __name__ == "__main__":
-  
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(handle_callback))
-    print("🤖 Бот запущено!")
-    app.run_polling(drop_pending_updates=True)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# This file is complete above
+    loop = asyncio.get_event_loop()
+    loop.create_task(send_daily_reminders(app))
+
+    print("🤖 Бот v2.0 запущено!")
+    app.run_polling(drop_pending_updates=True)
